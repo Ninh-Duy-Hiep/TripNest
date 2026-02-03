@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  GUEST
+  HOST
+  ADMIN
+}
+
+enum Status {
+  Active
+  Inactive
+}
+
+enum PropertyType {
+  EntirePlace
+  PrivateRoom
+  SharedRoom
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  password       String    @db.VarChar(255)
+  fullName       String    @db.VarChar(255)
+  phoneNumber    String    @db.VarChar(255)
+  avatar         String    @db.VarChar(255)
+  role           Role      @default(GUEST)
+  status         Status    @default(Active)
+  identityNumber String?   @db.VarChar(255)
+  bio            String?   @db.Text
+  becomeHostAt   DateTime?
+  isDeleted      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  listings Listings[]
+
+  @@index([status])
+  @@index([role])
+}
+
+model Listings {
+  id            String       @id @default(uuid())
+  hostId        String
+  title         String       @db.VarChar(255)
+  description   String       @db.Text
+  propertyType  PropertyType
+  province      String       @db.VarChar(255)
+  ward          String       @db.VarChar(255)
+  address       String       @db.VarChar(255)
+  maxGuests     Int
+  bedRooms      Int
+  beds          Int
+  bathRooms     Int
+  pricePerNight Float
+  status        Status       @default(Active)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  host              User                 @relation(fields: [hostId], references: [id])
+  listingsImages    Listings_Images[]
+  listingsAmenities Listings_Amenities[]
+
+
+  @@index([hostId])
+  @@index([province])
+  @@index([pricePerNight])
+  @@index([province, status])
+  @@index([propertyType])
+}
+
+model Listings_Images {
+  id        String   @id @default(uuid())
+  listingId String
+  imageName String   @db.VarChar(255)
+  imageUrl  String   @db.VarChar(255)
+  order     Int
+  createdAt DateTime @default(now())
+
+  listing Listings @relation(fields: [listingId], references: [id])
+
+  @@index([listingId])
+}
+
+model Listings_Amenities {
+  id         String   @id @default(uuid())
+  listingId  String
+  amenityId  String
+  customName String   @db.VarChar(255)
+  createdAt  DateTime @default(now())
+
+  listing Listings @relation(fields: [listingId], references: [id])
+
+  @@index([listingId])
+  @@index([amenityId])
+}
