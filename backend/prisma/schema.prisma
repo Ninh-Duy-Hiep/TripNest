@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -25,25 +25,39 @@ enum PropertyType {
 }
 
 model User {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  password       String    @db.VarChar(255)
-  fullName       String    @db.VarChar(255)
-  phoneNumber    String    @db.VarChar(255)
-  avatar         String    @db.VarChar(255)
-  role           Role      @default(GUEST)
-  status         Status    @default(Active)
-  identityNumber String?   @db.VarChar(255)
-  bio            String?   @db.Text
-  becomeHostAt   DateTime?
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String    @db.VarChar(255)
+  fullName           String    @db.VarChar(255)
+  phoneNumber        String    @db.VarChar(255)
+  avatar             String    @db.VarChar(255)
+  role               Role      @default(GUEST)
+  status             Status    @default(Active)
+  identityNumber     String?   @db.VarChar(255)
+  bio                String?   @db.Text
+  becomeHostAt       DateTime?
+  isDeleted          Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  listings Listings[]
+  listings      Listings[]
+  refreshTokens Refresh_Token[]
 
   @@index([status])
+  @@index([fullName])
   @@index([role])
+}
+
+model Refresh_Token {
+  id        String   @id @default(uuid())
+  token     String   @db.Text
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Listings {
@@ -67,7 +81,6 @@ model Listings {
   host              User                 @relation(fields: [hostId], references: [id])
   listingsImages    Listings_Images[]
   listingsAmenities Listings_Amenities[]
-
 
   @@index([hostId])
   @@index([province])
